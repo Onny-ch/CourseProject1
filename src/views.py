@@ -46,11 +46,7 @@ def home_page(date_time_string: str) -> dict[str, Any]:  # готова
     return home_page_answer  # возвращается корректный JSON-ответ
 
 
-# ---------------------------------------------------------------------------------------------------------------------
-
-
-# def event_page(dataframe):  # на вход идет датафрейм
-def event_page(date_time_string: str, data_range: str = "M") -> json:  # на вход идет дата и необязательный параметр
+def event_page(actual_date_string: str, date_range: str = "M") -> json:  # на вход идет дата и необязательный параметр
     """
     Принимает на вход дату и параметр диапазона, на выходе выдавая:
         1. Расходы
@@ -59,10 +55,9 @@ def event_page(date_time_string: str, data_range: str = "M") -> json:  # на в
         4. Стоимость акций из S&P 500
     """
 
-    expenses = expenses_calculator(file_pd_info, date_time_string)  # 1. Расходы
+    expenses = expenses_calculator(file_pd_info, actual_date_string, date_range)  # 1. Расходы
 
-    receipts = income_calculator(file_pd_info, date_time_string)  # 2. Поступления
-    total_income = 0
+    income = income_calculator(file_pd_info, actual_date_string, date_range)  # 2. Поступления
 
     rate = exchange_rate(user_data)  # 3. Курс валют
 
@@ -75,12 +70,12 @@ def event_page(date_time_string: str, data_range: str = "M") -> json:  # на в
             "transfers_and_cash": expenses["transfers_and_cash"]
         },
         "income": {
-            "total_amount": total_income,
-            "main": [receipts]
+            "total_amount": income["total_amount"],
+            "main": income["main"]
         },
-        "currency_rates": [rate],
-        "stock_prices": [stock_prices]
+        "currency_rates": rate,
+        "stock_prices": stock_prices
 
     }
 
-    return event_page_answer  # event_page_answer  # возвращается корректный JSON-ответ согласно ТЗ
+    return event_page_answer # event_page_answer  # возвращается корректный JSON-ответ согласно ТЗ

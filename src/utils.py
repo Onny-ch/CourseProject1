@@ -1,3 +1,4 @@
+import datetime
 import time
 from typing import Any
 
@@ -106,8 +107,25 @@ def top_five_by_trans_amount(
     return sorted_transactions_by_time
 
 
-def expenses_calculator(df: pd.DataFrame, transactions_date: str) -> dict[Any, Any]:
-    actual_date = time.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+def expenses_calculator(df: pd.DataFrame, transactions_date: str, date_range: str) -> dict[Any, Any]:
+    """Расчет всех расходов в заданном диапазоне (неделя, месяц, год или за все время"""
+
+    actual_date_time = time.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+    actual_date_datetime = datetime.datetime.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+    range_date_datetime = datetime.datetime.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+
+    if date_range == "W":
+        range_date_datetime = range_date_datetime - datetime.timedelta(days=actual_date_time.tm_wday)
+        range_date_datetime = range_date_datetime.replace(hour=0, minute=0, second=0)
+
+    elif date_range == "M":
+        range_date_datetime = range_date_datetime.replace(day=1, hour=0, minute=0, second=0)
+
+    elif date_range == "Y":
+        range_date_datetime = range_date_datetime.replace(month=1, day=1, hour=0, minute=0, second=0)
+
+    elif date_range == "ALL":
+        range_date_datetime = range_date_datetime.replace(year=1970, month=1, day=1, hour=0, minute=0, second=0)
 
     amount = 0
 
@@ -117,7 +135,8 @@ def expenses_calculator(df: pd.DataFrame, transactions_date: str) -> dict[Any, A
     nan_check_cat = df["Категория"].notnull()
 
     for i in df.index:
-        if time.strptime(df.loc[i, "Дата операции"].item(), "%d.%m.%Y %H:%M:%S") < actual_date:
+        datetime_for_i = datetime.datetime.strptime(df.loc[i, "Дата операции"], "%d.%m.%Y %H:%M:%S")
+        if range_date_datetime < datetime_for_i < actual_date_datetime:
             if df.loc[i, "Сумма операции"] < 0:
                 amount += df.loc[i, "Сумма операции"].item()
 
@@ -174,17 +193,27 @@ def expenses_calculator(df: pd.DataFrame, transactions_date: str) -> dict[Any, A
 
     main.append(category_other)
 
+    try:
+        transfers = next(el["amount"] for el in transfers_and_cash if el["category"] == "Переводы")
+    except StopIteration:
+        transfers = 0
+
+    try:
+        cash = next(el["amount"] for el in transfers_and_cash if el["category"] == "Наличные")
+    except StopIteration:
+        cash = 0
+
     expenses = {
         "total_amount": total_amount,
         "main": main,
         "transfers_and_cash": [
             {
                 "category": "Наличные",
-                "amount": next(el["amount"] for el in transfers_and_cash if el["category"] == "Наличные"),
+                "amount": cash,
             },
             {
                 "category": "Переводы",
-                "amount": next(el["amount"] for el in transfers_and_cash if el["category"] == "Переводы"),
+                "amount": transfers,
             },
         ],
     }
@@ -192,8 +221,73 @@ def expenses_calculator(df: pd.DataFrame, transactions_date: str) -> dict[Any, A
     return expenses
 
 
-def income_calculator(df: pd.DataFrame, transactions_date: str) -> dict[Any, Any]:
-    return dict()
+def income_calculator(df: pd.DataFrame, transactions_date: str, date_range: str) -> dict[Any, Any]:
+    """Расчет всех приходов в заданном диапазоне (неделя, месяц, год или за все время"""
+
+    actual_date_time = time.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+    actual_date_datetime = datetime.datetime.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+    range_date_datetime = datetime.datetime.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+
+    if date_range == "W":
+        range_date_datetime = range_date_datetime - datetime.timedelta(days=actual_date_time.tm_wday)
+        range_date_datetime = range_date_datetime.replace(hour=0, minute=0, second=0)
+    elif date_range == "M":
+        range_date_datetime = range_date_datetime.replace(day=1, hour=0, minute=0, second=0)
+    elif date_range == "Y":
+        range_date_datetime = range_date_datetime.replace(month=1, day=1, hour=0, minute=0, second=0)
+    elif date_range == "ALL":
+        range_date_datetime = range_date_datetime.replace(year=1970, month=1, day=1, hour=0, minute=0, second=0)
+
+    amount = 0
+
+    category_list: list[dict[str, Any]] = []
+
+    nan_check_summ = df["Сумма операции"].notnull()
+    nan_check_cat = df["Категория"].notnull()
+
+    for i in df.index:
+        datetime_for_i = datetime.datetime.strptime(df.loc[i, "Дата операции"], "%d.%m.%Y %H:%M:%S")
+        if range_date_datetime < datetime_for_i < actual_date_datetime:
+            if df.loc[i, "Сумма операции"] > 0:
+                amount += df.loc[i, "Сумма операции"].item()
+
+                if nan_check_summ[i] and nan_check_cat[i]:
+
+                    found = False
+
+                    for cat in category_list:
+                        if df.loc[i, "Категория"] == cat["category"]:
+                            cat["amount"] += df.loc[i, "Сумма операции"].item()
+                            found = True
+                            break
+
+                    if not found:
+                        category_list.append(
+                            {"category": df.loc[i, "Категория"], "amount": df.loc[i, "Сумма операции"].item()}
+                        )
+
+                else:
+                    found = False
+
+                    for cat in category_list:
+                        if cat["category"] == "Остальное":
+                            cat["amount"] += df.loc[i, "Сумма операции"].item()
+                            found = True
+                            break
+
+                    if not found:
+                        category_list.append({"category": "Остальное", "amount": df.loc[i, "Сумма операции"].item()})
+
+    total_amount = round(amount, 2)
+
+    category_list.sort(key=lambda x: x["amount"], reverse=True)
+
+    income = {
+        "total_amount": total_amount,
+        "main": category_list,
+    }
+
+    return income
 
 
 def exchange_rate(user_data: dict[str, list[str]]) -> list[dict[str, float]]:  # готова (Спрятать API)
