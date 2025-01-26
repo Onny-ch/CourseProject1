@@ -1,22 +1,19 @@
 import datetime
 import json
-import logging
+import math
 import re
 from typing import Any
+
 import pandas as pd
-import numpy as np
-import math
-
-from src.utils import read_xls
 
 
-def best_cashback_categories(file_info: pd.DataFrame, year: str, month: str) -> json:
+def best_cashback_categories(file_info: pd.DataFrame, year: str, month: str) -> str:
     """
     Функция позволяет проанализировать, какие категории были наиболее выгодными
     для выбора в качестве категорий повышенного кэшбека
     """
 
-    category_list = []
+    category_list: list[dict[Any, Any]] = []
 
     nan_check_cashback = file_info["Кэшбэк"].notnull()
 
@@ -39,10 +36,9 @@ def best_cashback_categories(file_info: pd.DataFrame, year: str, month: str) -> 
                         found = True
 
                 if not found:
-                    category_list.append({
-                        "Категория": file_info.loc[i, "Категория"],
-                        "Кэшбэк": file_info.loc[i, "Кэшбэк"].item()
-                    })
+                    category_list.append(
+                        {"Категория": file_info.loc[i, "Категория"], "Кэшбэк": file_info.loc[i, "Кэшбэк"].item()}
+                    )
 
     sorted_category_list = sorted(category_list, key=lambda x: x["Кэшбэк"], reverse=True)
 
@@ -50,9 +46,11 @@ def best_cashback_categories(file_info: pd.DataFrame, year: str, month: str) -> 
 
     for i in range(0, 3):
         try:
-            cashback_categories.update({
-                sorted_category_list[i]["Категория"]: sorted_category_list[i]["Кэшбэк"],
-            })
+            cashback_categories.update(
+                {
+                    sorted_category_list[i]["Категория"]: sorted_category_list[i]["Кэшбэк"],
+                }
+            )
         except IndexError:
             pass
 
@@ -79,14 +77,13 @@ def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int =
                 difference = math.ceil(-el["Сумма операции"] / limit) * limit
                 total_invest += difference + el["Сумма операции"]
 
-    # json, datetime, logging
     return round(total_invest, 2)
 
 
-def simple_search(transactions, search_string: str) -> json:
+def simple_search(transactions: list[dict[str, Any]], search_string: str) -> str:
     """Функция, производящая поиск по запросу среди транзакций, содержащих запрос в описании или категории."""
 
-    all_transactions = []
+    all_transactions: list[dict[Any, Any]] = []
 
     for el in transactions:
         if not pd.isna(el["Категория"]):
@@ -95,14 +92,13 @@ def simple_search(transactions, search_string: str) -> json:
 
     json_answer = json.dumps(all_transactions, ensure_ascii=False, indent=4)
 
-    # json, logging
     return json_answer
 
 
-def phone_number_search(transactions: list[dict[str, Any]]) -> json:
+def phone_number_search(transactions: list[dict[str, Any]]) -> str:
     """Функция возвращает JSON со всеми транзакциями, содержащими в описании мобильные номера."""
 
-    all_transactions = []
+    all_transactions: list[dict[Any, Any]] = []
 
     pattern = re.compile(r"\d{3} \d\d-\d\d-\d\d")
 
@@ -112,20 +108,19 @@ def phone_number_search(transactions: list[dict[str, Any]]) -> json:
 
     json_answer = json.dumps(all_transactions, ensure_ascii=False, indent=4)
 
-    # json, logging, re
     return json_answer
 
 
-def search_for_transfers_to_individuals(transactions: list[dict[str, Any]]) -> json:
+def search_for_transfers_to_individuals(transactions: list[dict[str, Any]]) -> str:
     """Функция возвращает JSON со всеми транзакциями, которые относятся к переводам физлицам."""
 
-    pattern = re.compile(r'\w+ \w\.')
+    pattern = re.compile(r"\w+ \w\.")
 
-    list_of_transfers = [elem
-                         for elem in transactions
-                         if elem["Категория"] == "Переводы"
-                         and pattern.search(elem["Описание"], re.IGNORECASE)]
+    list_of_transfers: list[dict[Any, Any]] = [
+        elem
+        for elem in transactions
+        if elem["Категория"] == "Переводы" and pattern.search(elem["Описание"], re.IGNORECASE)
+    ]
     json_with_cat = json.dumps(list_of_transfers, ensure_ascii=False, indent=4)
 
-    # json, logging, re
     return json_with_cat

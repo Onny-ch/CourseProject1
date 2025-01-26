@@ -49,7 +49,7 @@ def home_page(date_time_string: str) -> str:  # готова
         "stock_prices": stocks_prices,
     }
 
-    json_home_page = json.dumps(home_page_answer, ensure_ascii=False)
+    json_home_page = json.dumps(home_page_answer, ensure_ascii=False, indent=4)
 
     return json_home_page
 
@@ -82,6 +82,6 @@ def event_page(actual_date_string: str, date_range: str = "M") -> str:
         "stock_prices": stock_prices,
     }
 
-    json_event_page = json.dumps(event_page_answer, ensure_ascii=False)
+    json_event_page = json.dumps(event_page_answer, ensure_ascii=False, indent=4)
 
     return json_event_page

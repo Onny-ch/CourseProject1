@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 
 
-def read_xls(xls_file: str) -> list[Any]:  # готова
+def read_xls(xls_file: str) -> list[Any]:
     """Функция считывания финансовых операций из Excel файла"""
 
     df = pd.read_excel(xls_file)
@@ -15,7 +15,7 @@ def read_xls(xls_file: str) -> list[Any]:  # готова
     return transactions_data
 
 
-def greetings(time_string: str) -> str:  # готова
+def greetings(time_string: str) -> str:
     """Функция приветствия пользователя, меняющаяся от времени суток"""
 
     greetings_string = ""
@@ -33,7 +33,7 @@ def greetings(time_string: str) -> str:  # готова
     return greetings_string
 
 
-def card_information(transactions_data: list[dict[Any, Any]]) -> list[dict[str, Any]]:  # готова
+def card_information(transactions_data: list[dict[Any, Any]]) -> list[dict[str, Any]]:
     """
     Информация по каждой карте:
         1. Последние 4 цифры карты,
@@ -47,9 +47,7 @@ def card_information(transactions_data: list[dict[Any, Any]]) -> list[dict[str, 
     for transaction in transactions_data:
         if type(transaction["Номер карты"]) is str:
             if transaction["Номер карты"] not in card_numbers:
-                card_numbers.append(
-                    transaction["Номер карты"]
-                )  # Получаем список карт по которым будем искать информацию
+                card_numbers.append(transaction["Номер карты"])
 
     for card in card_numbers:
         total_spent = float()
@@ -66,9 +64,7 @@ def card_information(transactions_data: list[dict[Any, Any]]) -> list[dict[str, 
     return expenses_amount
 
 
-def top_five_by_trans_amount(
-    transactions_date: str, transactions_data: list[dict[Any, Any]]
-) -> list[dict[Any, Any]]:  # готова
+def top_five_by_trans_amount(transactions_date: str, transactions_data: list[dict[Any, Any]]) -> list[dict[Any, Any]]:
     """
     Сортировка списка транзакций по 'Сумме платежа' и возврат 5 самых дорогих в виде:
         {
@@ -110,7 +106,9 @@ def expenses_calculator(df: pd.DataFrame, transactions_date: str, date_range: st
     """Расчет всех расходов в заданном диапазоне (неделя, месяц, год или за все время"""
 
     actual_date_time = time.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+
     actual_date_datetime = datetime.datetime.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
+
     range_date_datetime = datetime.datetime.strptime(transactions_date, "%Y-%m-%d %H:%M:%S")
 
     if date_range == "W":
@@ -135,6 +133,7 @@ def expenses_calculator(df: pd.DataFrame, transactions_date: str, date_range: st
 
     for i in df.index:
         datetime_for_i = datetime.datetime.strptime(df.loc[i, "Дата операции"], "%d.%m.%Y %H:%M:%S")
+
         if range_date_datetime < datetime_for_i < actual_date_datetime:
             if df.loc[i, "Сумма операции"] < 0:
                 amount += df.loc[i, "Сумма операции"].item()
@@ -246,6 +245,7 @@ def income_calculator(df: pd.DataFrame, transactions_date: str, date_range: str)
 
     for i in df.index:
         datetime_for_i = datetime.datetime.strptime(df.loc[i, "Дата операции"], "%d.%m.%Y %H:%M:%S")
+
         if range_date_datetime < datetime_for_i < actual_date_datetime:
             if df.loc[i, "Сумма операции"] > 0:
                 amount += df.loc[i, "Сумма операции"].item()
