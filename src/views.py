@@ -1,5 +1,4 @@
 import json
-from typing import Any
 
 import pandas as pd
 
@@ -22,7 +21,7 @@ file_info_pd = pd.read_excel("data\\operations.xlsx")
 
 
 # Функция для страницы "Главная"
-def home_page(date_time_string: str) -> dict[str, Any]:  # готова
+def home_page(date_time_string: str) -> str:  # готова
     """
     Принимает строку с датой и возвращает информацию в виде:
         1. Приветствие в соответствии с временем суток
@@ -50,10 +49,12 @@ def home_page(date_time_string: str) -> dict[str, Any]:  # готова
         "stock_prices": stocks_prices,
     }
 
-    return home_page_answer
+    json_home_page = json.dumps(home_page_answer, ensure_ascii=False)
+
+    return json_home_page
 
 
-def event_page(actual_date_string: str, date_range: str = "ALL") -> dict[Any, Any]:
+def event_page(actual_date_string: str, date_range: str = "M") -> str:
     """
     Принимает на вход дату и параметр диапазона, на выходе выдавая:
         1. Расходы
@@ -81,4 +82,6 @@ def event_page(actual_date_string: str, date_range: str = "ALL") -> dict[Any, An
         "stock_prices": stock_prices,
     }
 
-    return event_page_answer
+    json_event_page = json.dumps(event_page_answer, ensure_ascii=False)
+
+    return json_event_page
