@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np
 import math
 
-
 from src.utils import read_xls
 
 
@@ -16,6 +15,7 @@ def best_cashback_categories(file_info: pd.DataFrame, year: str, month: str) -> 
     Функция позволяет проанализировать, какие категории были наиболее выгодными
     для выбора в качестве категорий повышенного кэшбека
     """
+
     category_list = []
 
     nan_check_cashback = file_info["Кэшбэк"].notnull()
@@ -61,8 +61,9 @@ def best_cashback_categories(file_info: pd.DataFrame, year: str, month: str) -> 
     return json_cashback_categories
 
 
-def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int = 50) -> float:  # в работе
+def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int = 50) -> float:
     """Функция, высчитывающая сумму денег, которую удалось бы отложить в 'Инвесткопилку'"""
+
     month_datetime = datetime.datetime.strptime(month, "%Y-%m")
 
     month_datetime_range = datetime.datetime.strptime(f"{month[0:5]}{int(month[-2:])+1}", "%Y-%m")
@@ -82,7 +83,7 @@ def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int =
     return round(total_invest, 2)
 
 
-def simple_search(transactions, search_string: str) -> json:  # в работе
+def simple_search(transactions, search_string: str) -> json:
     """Функция, производящая поиск по запросу среди транзакций, содержащих запрос в описании или категории."""
 
     all_transactions = []
@@ -98,11 +99,21 @@ def simple_search(transactions, search_string: str) -> json:  # в работе
     return json_answer  # возвращает корректный JSON-ответ
 
 
-def phone_number_search(transactions_list: list[dict[str, Any]]) -> json:  # в работе
+def phone_number_search(transactions: list[dict[str, Any]]) -> json:
     """Функция возвращает JSON со всеми транзакциями, содержащими в описании мобильные номера."""
 
+    all_transactions = []
+
+    pattern = re.compile(r"\d{3} \d\d-\d\d-\d\d")
+
+    for el in transactions:
+        if re.search(pattern, el["Описание"]):
+            all_transactions.append(el)
+
+    json_answer = json.dumps(all_transactions, ensure_ascii=False)
+
     # json, logging, re
-    return "correct json-answer"  # возвращает корректный JSON-ответ
+    return json_answer
 
 
 def search_for_transfers_to_individuals(transactions_list: list[dict[str, Any]]) -> json:  # в работе
