@@ -5,6 +5,7 @@ import re
 from typing import Any
 import pandas as pd
 import numpy as np
+import math
 
 
 from src.utils import read_xls
@@ -20,7 +21,9 @@ def best_cashback_categories(file_info, year: str, month: str) -> json:
     nan_check_cashback = file_info["Кэшбэк"].notnull()
 
     year_datetime = datetime.datetime.strptime(f"{year}.{month}", "%Y.%m")
-    year_datetime_range = year_datetime.replace(day=31, hour=23, minute=59, second=59)
+
+    year_datetime_range = datetime.datetime.strptime(f"{year}.{int(month)+1}", "%Y.%m")
+    year_datetime_range = year_datetime_range - datetime.timedelta(seconds=1)
 
     for i in file_info.index:
         trans_datetime = datetime.datetime.strptime(file_info.loc[i, "Дата операции"], "%d.%m.%Y %H:%M:%S")
@@ -58,11 +61,25 @@ def best_cashback_categories(file_info, year: str, month: str) -> json:
     return json_cashback_categories
 
 
-def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int = 50) -> json:  # в работе
+def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int = 50) -> float:  # в работе
     """Функция, высчитывающая сумму денег, которую удалось бы отложить в 'Инвесткопилку'"""
+    month_datetime = datetime.datetime.strptime(month, "%Y-%m")
+
+    month_datetime_range = datetime.datetime.strptime(f"{month[0:5]}{int(month[-2:])+1}", "%Y-%m")
+    month_datetime_range = month_datetime_range - datetime.timedelta(seconds=1)
+
+    total_invest = 0
+
+    for el in transactions:
+        trans_datetime = datetime.datetime.strptime(el["Дата операции"], "%d.%m.%Y %H:%M:%S")
+
+        if month_datetime < trans_datetime < month_datetime_range:
+            if el["Сумма операции"] < 0:
+                difference = math.ceil(-el["Сумма операции"] / limit) * limit
+                total_invest += difference + el["Сумма операции"]
 
     # json, datetime, logging
-    return "sas"  # возвращает корректный JSON-ответ
+    return round(total_invest, 2)
 
 
 def simple_search(search_string: str) -> json:  # в работе
