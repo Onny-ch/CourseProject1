@@ -3,25 +3,59 @@ import json
 import logging
 import re
 from typing import Any
+import pandas as pd
+import numpy as np
+
 
 from src.utils import read_xls
 
 
-def best_cashback_categories(trans_data: json, year: str, month: str) -> json:  # в работе
+def best_cashback_categories(file_info, year: str, month: str) -> json:
     """
     Функция позволяет проанализировать, какие категории были наиболее выгодными
     для выбора в качестве категорий повышенного кэшбека
     """
+    category_list = []
 
-    # json, datetime, logging
-    return "ass"  # возвращает корректный JSON-ответ
-# Формат выходных данных:
-#
-# {
-#     "Категория 1": 1000,
-#     "Категория 2": 2000,
-#     "Категория 3": 500
-# }
+    nan_check_cashback = file_info["Кэшбэк"].notnull()
+
+    year_datetime = datetime.datetime.strptime(f"{year}.{month}", "%Y.%m")
+    year_datetime_range = year_datetime.replace(day=31, hour=23, minute=59, second=59)
+
+    for i in file_info.index:
+        trans_datetime = datetime.datetime.strptime(file_info.loc[i, "Дата операции"], "%d.%m.%Y %H:%M:%S")
+
+        if year_datetime < trans_datetime < year_datetime_range:
+            if nan_check_cashback[i]:
+                found = False
+
+                for eel in category_list:
+                    if file_info.loc[i, "Категория"] == eel["Категория"]:
+                        eel["Кэшбэк"] += file_info.loc[i, "Кэшбэк"].item()
+
+                        found = True
+
+                if not found:
+                    category_list.append({
+                        "Категория": file_info.loc[i, "Категория"],
+                        "Кэшбэк": file_info.loc[i, "Кэшбэк"].item()
+                    })
+
+    sorted_category_list = sorted(category_list, key=lambda x: x["Кэшбэк"], reverse=True)
+
+    cashback_categories = {}
+
+    for i in range(0, 3):
+        try:
+            cashback_categories.update({
+                sorted_category_list[i]["Категория"]: sorted_category_list[i]["Кэшбэк"],
+            })
+        except IndexError:
+            pass
+
+    json_cashback_categories = json.dumps(cashback_categories, ensure_ascii=False)
+
+    return json_cashback_categories
 
 
 def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int = 50) -> json:  # в работе
