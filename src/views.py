@@ -1,17 +1,24 @@
 import json
 from typing import Any
+
 import pandas as pd
 
 from src.utils import (
-    card_information, exchange_rate, greetings, read_xls, stock_price,
-    top_five_by_trans_amount, expenses_calculator, income_calculator
+    card_information,
+    exchange_rate,
+    expenses_calculator,
+    greetings,
+    income_calculator,
+    read_xls,
+    stock_price,
+    top_five_by_trans_amount,
 )
 
 with open("user_settings.json", "r") as file:
     user_data = json.load(file)
 
 file_info = read_xls("data\\operations.xlsx")
-file_pd_info = pd.read_excel("data\\operations.xlsx")
+file_info_pd = pd.read_excel("data\\operations.xlsx")
 
 
 # Функция для страницы "Главная"
@@ -29,7 +36,7 @@ def home_page(date_time_string: str) -> dict[str, Any]:  # готова
 
     card_info = card_information(file_info)  # 2 Инфо по карте
 
-    top_5 = top_five_by_trans_amount(date_time_string, file_info)  # 3 Top 5 by summ
+    top_5 = top_five_by_trans_amount(date_time_string, file_info)  # 3 Топ 5 по сумме транзакций
 
     rate = exchange_rate(user_data)  # 4 Курс валют
 
@@ -43,10 +50,10 @@ def home_page(date_time_string: str) -> dict[str, Any]:  # готова
         "stock_prices": stocks_prices,
     }
 
-    return home_page_answer  # возвращается корректный JSON-ответ
+    return home_page_answer
 
 
-def event_page(actual_date_string: str, date_range: str = "M") -> json:  # на вход идет дата и необязательный параметр
+def event_page(actual_date_string: str, date_range: str = "ALL") -> dict[Any, Any]:
     """
     Принимает на вход дату и параметр диапазона, на выходе выдавая:
         1. Расходы
@@ -55,9 +62,9 @@ def event_page(actual_date_string: str, date_range: str = "M") -> json:  # на 
         4. Стоимость акций из S&P 500
     """
 
-    expenses = expenses_calculator(file_pd_info, actual_date_string, date_range)  # 1. Расходы
+    expenses = expenses_calculator(file_info_pd, actual_date_string, date_range)  # 1. Расходы
 
-    income = income_calculator(file_pd_info, actual_date_string, date_range)  # 2. Поступления
+    income = income_calculator(file_info_pd, actual_date_string, date_range)  # 2. Поступления
 
     rate = exchange_rate(user_data)  # 3. Курс валют
 
@@ -67,15 +74,11 @@ def event_page(actual_date_string: str, date_range: str = "M") -> json:  # на 
         "expenses": {
             "total amount": expenses["total_amount"],
             "main": expenses["main"],
-            "transfers_and_cash": expenses["transfers_and_cash"]
+            "transfers_and_cash": expenses["transfers_and_cash"],
         },
-        "income": {
-            "total_amount": income["total_amount"],
-            "main": income["main"]
-        },
+        "income": {"total_amount": income["total_amount"], "main": income["main"]},
         "currency_rates": rate,
-        "stock_prices": stock_prices
-
+        "stock_prices": stock_prices,
     }
 
-    return event_page_answer # event_page_answer  # возвращается корректный JSON-ответ согласно ТЗ
+    return event_page_answer
