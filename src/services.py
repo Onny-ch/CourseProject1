@@ -56,7 +56,7 @@ def best_cashback_categories(file_info: pd.DataFrame, year: str, month: str) -> 
         except IndexError:
             pass
 
-    json_cashback_categories = json.dumps(cashback_categories, ensure_ascii=False)
+    json_cashback_categories = json.dumps(cashback_categories, ensure_ascii=False, indent=4)
 
     return json_cashback_categories
 
@@ -93,10 +93,10 @@ def simple_search(transactions, search_string: str) -> json:
             if search_string.lower() in el["Описание"].lower() or search_string.lower() in el["Категория"].lower():
                 all_transactions.append(el)
 
-    json_answer = json.dumps(all_transactions, ensure_ascii=False)
+    json_answer = json.dumps(all_transactions, ensure_ascii=False, indent=4)
 
     # json, logging
-    return json_answer  # возвращает корректный JSON-ответ
+    return json_answer
 
 
 def phone_number_search(transactions: list[dict[str, Any]]) -> json:
@@ -110,19 +110,19 @@ def phone_number_search(transactions: list[dict[str, Any]]) -> json:
         if re.search(pattern, el["Описание"]):
             all_transactions.append(el)
 
-    json_answer = json.dumps(all_transactions, ensure_ascii=False)
+    json_answer = json.dumps(all_transactions, ensure_ascii=False, indent=4)
 
     # json, logging, re
     return json_answer
 
 
-def search_for_transfers_to_individuals(transactions_list: list[dict[str, Any]]) -> json:  # в работе
+def search_for_transfers_to_individuals(transactions: list[dict[str, Any]]) -> json:
     """Функция возвращает JSON со всеми транзакциями, которые относятся к переводам физлицам."""
-    transactions_data = read_xls('data\\operations.xlsx')
-    pattern = re.compile(r'(а-я){+}')
+
+    pattern = re.compile(r'\w+ \w\.')
 
     list_of_transfers = [elem
-                         for elem in transactions_data
+                         for elem in transactions
                          if elem["Категория"] == "Переводы"
                          and pattern.search(elem["Описание"], re.IGNORECASE)]
     json_with_cat = json.dumps(list_of_transfers, ensure_ascii=False, indent=4)
