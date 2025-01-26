@@ -11,7 +11,7 @@ import math
 from src.utils import read_xls
 
 
-def best_cashback_categories(file_info, year: str, month: str) -> json:
+def best_cashback_categories(file_info: pd.DataFrame, year: str, month: str) -> json:
     """
     Функция позволяет проанализировать, какие категории были наиболее выгодными
     для выбора в качестве категорий повышенного кэшбека
@@ -82,13 +82,20 @@ def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int =
     return round(total_invest, 2)
 
 
-def simple_search(search_string: str) -> json:  # в работе
+def simple_search(transactions, search_string: str) -> json:  # в работе
     """Функция, производящая поиск по запросу среди транзакций, содержащих запрос в описании или категории."""
 
-    # Пользователь передает строку для поиска, возвращается JSON - ответ со
-    # всеми транзакциями, содержащими запрос в описании или категории.
+    all_transactions = []
+
+    for el in transactions:
+        if not pd.isna(el["Категория"]):
+            if search_string.lower() in el["Описание"].lower() or search_string.lower() in el["Категория"].lower():
+                all_transactions.append(el)
+
+    json_answer = json.dumps(all_transactions, ensure_ascii=False)
+
     # json, logging
-    return "json-answer"  # возвращает корректный JSON-ответ
+    return json_answer  # возвращает корректный JSON-ответ
 
 
 def phone_number_search(transactions_list: list[dict[str, Any]]) -> json:  # в работе
