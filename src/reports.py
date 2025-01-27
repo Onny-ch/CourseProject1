@@ -2,19 +2,25 @@ import logging
 import datetime
 import json
 import calendar
+import os
 
 import pandas as pd
 
 
-# def write_in_file():
-#     def wrapper(func):
-#         def inner():
-#             with open("data\\reports.txt", "a") as file:
-#                 file.write(func())
-#         return inner
-#     return wrapper
+def log_to_file(path="data\\reports.txt"):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    def write_in_file(func):
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            with open(path, "a") as file:
+                file.write(f"{result}\n")
+            return result
+        return wrapper
+    return write_in_file
 
 
+@log_to_file()
 def expenses_by_category(
         df: pd.DataFrame,
         category_name: str,
@@ -44,6 +50,7 @@ def expenses_by_category(
     return json_answer
 
 
+@log_to_file()
 def spending_by_weekday(
         df: pd.DataFrame,
         optional_date: str = datetime.datetime.isoformat(datetime.datetime.now(), sep=" ")
@@ -88,6 +95,7 @@ def spending_by_weekday(
     return json_answer
 
 
+@log_to_file()
 def spending_of_wor_or_wee_days(
         df: pd.DataFrame,
         optional_date: str = datetime.datetime.isoformat(datetime.datetime.now(), sep=" ")
