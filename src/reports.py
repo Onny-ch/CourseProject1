@@ -94,8 +94,39 @@ def spending_of_wor_or_wee_days(
 ) -> str:
     """Функция выводит средние траты в рабочие и в выходные дни за последние три месяца (от переданной даты)"""
 
-    # in progress
+    starting_date = datetime.datetime.strptime(optional_date[:19], "%Y-%m-%d %H:%M:%S")
+    ending_date = datetime.datetime.strptime(optional_date[:19], "%Y-%m-%d %H:%M:%S")
 
+    for i in range(0, 3):
+        days_in_month = calendar.monthrange(ending_date.year, ending_date.month)[1]
+        ending_date -= datetime.timedelta(days=days_in_month)
 
+    workdays_list = {"amount": 0, "counter": 0}  # количество и счетчик трат в рабочие дни
+    weekdays_list = {"amount": 0, "counter": 0}  # количество и счетчик трат в выходные дни
 
-    return ""
+    for i in df.index:
+        transaction_date = datetime.datetime.strptime(df.loc[i, "Дата операции"], "%d.%m.%Y %H:%M:%S")
+
+        if ending_date < transaction_date < starting_date:
+            if df.loc[i, "Сумма операции"] < 0:
+                actual_day_of_the_week = datetime.datetime.weekday(transaction_date)
+
+                if actual_day_of_the_week < 5:
+                    workdays_list.update({
+                        "amount": workdays_list["amount"] + df.loc[i, "Сумма операции"].item(),
+                        "counter": workdays_list["counter"] + 1
+                    })
+                else:
+                    weekdays_list.update({
+                        "amount": weekdays_list["amount"] + df.loc[i, "Сумма операции"].item(),
+                        "counter": weekdays_list["counter"] + 1
+                    })
+
+    average_spending = [{
+        "workdays": -round(workdays_list["amount"] / workdays_list["counter"], 2),
+        "weekdays": -round(weekdays_list["amount"] / weekdays_list["counter"], 2)
+    }]  # средние траты в рабочие и выходные дни
+
+    json_answer = json.dumps(average_spending, ensure_ascii=False, indent=4)
+
+    return json_answer
